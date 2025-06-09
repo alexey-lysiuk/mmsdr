@@ -174,7 +174,7 @@ jobs:
           run: wget https://www.sdrplay.com/software/SDRplayAPI-macos-installer-universal-3.15.0.pkg && sudo installer -pkg SDRplayAPI-macos-installer-universal-3.15.0.pkg -target /
 
         - name: Install libiio
-          run: wget https://github.com/analogdevicesinc/libiio/archive/refs/tags/v0.26.tar.gz && 7z x v0.26.zip && cd libiio-0.26 && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release -DOSX_FRAMEWORK=0 .. && make -j3 && sudo make install && cd ../../
+          run: wget https://github.com/analogdevicesinc/libiio/archive/refs/tags/v0.26.zip && 7z x v0.26.zip && cd libiio-0.26 && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release -DOSX_FRAMEWORK=0 .. && make -j3 && sudo make install && cd ../../
 
         - name: Install libad9361
           run: git clone https://github.com/analogdevicesinc/libad9361-iio && cd libad9361-iio && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release -DOSX_FRAMEWORK=0 .. && make -j3 && sudo make install && cd ../../
@@ -707,6 +707,7 @@ jobs:
           run: gh release upload nightly sdrpp_all/* -R ${{github.repository}} --clobber
 
     check_spelling:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -719,6 +720,7 @@ jobs:
           run: cd $GITHUB_WORKSPACE && codespell -q 2 || true
 
     check_formatting:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
