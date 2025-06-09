@@ -15,7 +15,6 @@ env:
 
 jobs:
     build_windows:
-        if: 0
         runs-on: windows-latest
 
         steps:
@@ -99,7 +98,6 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_windows_x64.zip
 
     build_macos_intel:
-        if: 0
         runs-on: macos-13
 
         steps:
@@ -490,7 +488,6 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_noble_amd64:
-        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -513,7 +510,6 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_noble_aarch64:
-        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
