@@ -23,7 +23,7 @@ elseif (ANDROID)
         /sdr-kit/${ANDROID_ABI}/lib/libad9361.so
     )
 else (MSVC)
-    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND EXISTS "/Library/Frameworks/iio.framework" AND EXISTS "/Library/Frameworks/ad9361.framework")
         target_include_directories(plutosdr_source PRIVATE "/Library/Frameworks/iio.framework/Headers")
         target_link_libraries(plutosdr_source PRIVATE "/Library/Frameworks/iio.framework/iio")
 
