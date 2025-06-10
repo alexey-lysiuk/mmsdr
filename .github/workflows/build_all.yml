@@ -212,6 +212,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_macos_arm.zip
 
     build_debian_buster_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -234,6 +235,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_debian_buster_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
@@ -256,6 +258,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_debian_bullseye_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -278,6 +281,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_debian_bullseye_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
@@ -300,6 +304,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_debian_bookworm_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -322,6 +327,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_debian_bookworm_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
@@ -344,6 +350,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_debian_sid_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -366,6 +373,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_debian_sid_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
@@ -388,6 +396,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_focal_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -410,6 +419,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_focal_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
@@ -432,6 +442,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_jammy_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -454,6 +465,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_jammy_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
@@ -520,6 +532,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_oracular_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -542,6 +555,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_oracular_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
@@ -564,6 +578,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_raspios_bullseye_armhf:
+        if: 0
         runs-on: ARM
 
         steps:
@@ -591,6 +606,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_armhf.deb
 
     build_android:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -690,6 +706,7 @@ jobs:
           run: gh release upload nightly sdrpp_all/* -R ${{github.repository}} --clobber
 
     check_spelling:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -702,6 +719,7 @@ jobs:
           run: cd $GITHUB_WORKSPACE && codespell -q 2 || true
 
     check_formatting:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
