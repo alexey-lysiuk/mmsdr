@@ -51,6 +51,7 @@ git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile
 cd libfobos-sdr-agile
 git switch v.3.0.2-fixes
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cd build
 cmake --build .
 cmake --install .
 cd ../..
