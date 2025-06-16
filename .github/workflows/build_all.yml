@@ -80,7 +80,7 @@ jobs:
           run: git clone https://github.com/AlexandreRouma/libfobos ; cd libfobos ; mkdir build ; cd build ; cmake .. -DCMAKE_BUILD_TYPE=Release "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" ; cmake --build . --config Release ; cmake --install .
 
         - name: Install libfobos-sdr-agile
-          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile ; cd libfobos-sdr-agile ; git switch v.3.0.2-fixes ; cmake -S . -B build "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" ; cd build ; cmake --build . --config Release ; cmake --install .
+          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile ; cd libfobos-sdr-agile ; cp ../libusb_old/* libusb ; cp -R libusb\MS64 libusb\VS2022 ; git switch v.3.0.2-fixes ; cmake -S . -B build ; cd build ; cmake --build . --config Release ; cmake --install .
 
         - name: Prepare CMake
           working-directory: ${{runner.workspace}}/build
@@ -137,7 +137,7 @@ jobs:
           run: git clone https://github.com/AlexandreRouma/libfobos && cd libfobos && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make && sudo make install && cd ..
 
         - name: Install libfobos-sdr-agile
-          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile && cd libfobos-sdr-agile && git switch v.3.0.2-fixes && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cd build && cmake --build . && cmake --install .
+          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile && cd libfobos-sdr-agile && git switch v.3.0.2-fixes && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cd build && cmake --build . && sudo cmake --install .
 
         - name: Install more recent librtlsdr
           run: git clone https://github.com/osmocom/rtl-sdr && cd rtl-sdr && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release .. && make -j3 LIBRARY_PATH=$(pkg-config --libs-only-L libusb-1.0 | sed 's/\-L//') && sudo make install && cd ../../
@@ -197,7 +197,7 @@ jobs:
           run: git clone https://github.com/AlexandreRouma/libfobos && cd libfobos && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make && sudo make install && cd ..
 
         - name: Install libfobos-sdr-agile
-          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile && cd libfobos-sdr-agile && git switch v.3.0.2-fixes && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cd build && cmake --build . && cmake --install .
+          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile && cd libfobos-sdr-agile && git switch v.3.0.2-fixes && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cd build && cmake --build . && sudo cmake --install .
 
         - name: Install more recent librtlsdr
           run: git clone https://github.com/osmocom/rtl-sdr && cd rtl-sdr && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release .. && make -j3 LIBRARY_PATH=$(pkg-config --libs-only-L libusb-1.0 | sed 's/\-L//') && sudo make install && cd ../../
@@ -451,7 +451,6 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_jammy_amd64:
-        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -474,7 +473,6 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_jammy_aarch64:
-        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:

@@ -46,11 +46,11 @@ make -j2
 make install
 cd ../../
 
-# Install libfobos
+# Install libfobos-sdr-agile
 git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile
 cd libfobos-sdr-agile
 git switch v.3.0.2-fixes
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
 cd build
 cmake --build .
 cmake --install .
@@ -59,7 +59,7 @@ cd ../..
 cd SDRPlusPlus
 mkdir build
 cd build
-cmake .. -DOPT_BUILD_BLADERF_SOURCE=ON -DOPT_BUILD_LIMESDR_SOURCE=ON -DOPT_BUILD_SDRPLAY_SOURCE=ON -DOPT_BUILD_NEW_PORTAUDIO_SINK=ON -DOPT_BUILD_M17_DECODER=ON -DOPT_BUILD_PERSEUS_SOURCE=ON -DOPT_BUILD_RFNM_SOURCE=ON -DOPT_BUILD_FOBOSSDR_SOURCE=ON -DOPT_BUILD_FOBOSSDR_SOURCE=ON
+cmake .. -DOPT_BUILD_BLADERF_SOURCE=ON -DOPT_BUILD_LIMESDR_SOURCE=ON -DOPT_BUILD_SDRPLAY_SOURCE=ON -DOPT_BUILD_NEW_PORTAUDIO_SINK=ON -DOPT_BUILD_M17_DECODER=ON -DOPT_BUILD_PERSEUS_SOURCE=ON -DOPT_BUILD_RFNM_SOURCE=ON -DOPT_BUILD_FOBOSSDR_SOURCE=ON -DOPT_BUILD_FOBOSSDR_AGILE_SOURCE=ON
 make VERBOSE=1 -j2
 
 cd ..
