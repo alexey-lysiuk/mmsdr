@@ -37,7 +37,7 @@ jobs:
           run: 7z x libusb.7z -olibusb_old ; rm "C:/Program Files/PothosSDR/bin/libusb-1.0.dll" ; cp "libusb_old/MS64/dll/libusb-1.0.dll" "C:/Program Files/PothosSDR/bin/" ; rm "C:/Program Files/PothosSDR/lib/libusb-1.0.lib" ; cp "libusb_old/MS64/dll/libusb-1.0.lib" "C:/Program Files/PothosSDR/lib/"
 
         - name: Install libfobos-sdr-agile
-          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile ; cd libfobos-sdr-agile ; cp -R "${{runner.workspace}}/libusb_old/*" libusb ; cp -R libusb/MS64 libusb/VS2022 ; git switch v.3.0.2-fixes ; cmake -S . -B build ; cd build ; cmake --build . --config Release ; cmake --install .
+          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile ; cd libfobos-sdr-agile ; cp -R "${{runner.workspace}}/libusb_old/*" libusb ; dir libusb ; dir libusb/include ; cp -R libusb/MS64 libusb/VS2022 ; git switch v.3.0.2-fixes ; cmake -S . -B build ; cd build ; cmake --build . --config Release ; cmake --install .
 
         - name: Download librtlsdr
           run: Invoke-WebRequest -Uri "https://ftp.osmocom.org/binaries/windows/rtl-sdr/rtl-sdr-64bit-20240623.zip" -OutFile ${{runner.workspace}}/rtl-sdr.zip
