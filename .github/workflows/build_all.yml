@@ -37,7 +37,8 @@ jobs:
           run: 7z x libusb.7z -olibusb_old ; rm "C:/Program Files/PothosSDR/bin/libusb-1.0.dll" ; cp "libusb_old/MS64/dll/libusb-1.0.dll" "C:/Program Files/PothosSDR/bin/" ; rm "C:/Program Files/PothosSDR/lib/libusb-1.0.lib" ; cp "libusb_old/MS64/dll/libusb-1.0.lib" "C:/Program Files/PothosSDR/lib/"
 
         - name: Install libfobos-sdr-agile
-          run: git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile ; cd libfobos-sdr-agile ; cp -R ../libusb_old/* libusb ; cp -R libusb/MS64 libusb/VS2022 ; git switch v.3.0.2-fixes ; cmake -S . -B build ; cd build ; cmake --build . --config Release ; cmake --install .
+          working-directory: ${{runner.workspace}}
+          run: echo ${{runner.workspace}} ; dir . ; dir .. ; git clone https://github.com/alexey-lysiuk/libfobos-sdr-agile ; cd libfobos-sdr-agile ; cp -R ../libusb_old/* libusb ; cp -R libusb/MS64 libusb/VS2022 ; git switch v.3.0.2-fixes ; cmake -S . -B build ; cd build ; cmake --build . --config Release ; cmake --install .
 
         - name: Download librtlsdr
           run: Invoke-WebRequest -Uri "https://ftp.osmocom.org/binaries/windows/rtl-sdr/rtl-sdr-64bit-20240623.zip" -OutFile ${{runner.workspace}}/rtl-sdr.zip
@@ -101,6 +102,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_windows_x64.zip
 
     build_macos_intel:
+        if: 0
         runs-on: macos-13
 
         steps:
@@ -161,6 +163,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_macos_intel.zip
 
     build_macos_arm:
+        if: 0
         runs-on: macos-14
 
         steps:
@@ -451,6 +454,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_jammy_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -473,6 +477,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_jammy_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
@@ -495,6 +500,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_noble_amd64:
+        if: 0
         runs-on: ubuntu-latest
 
         steps:
@@ -517,6 +523,7 @@ jobs:
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
     build_ubuntu_noble_aarch64:
+        if: 0
         runs-on: ubuntu-24.04-arm
 
         steps:
