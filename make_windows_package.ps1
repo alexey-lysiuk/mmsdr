@@ -26,6 +26,7 @@ cp $build_dir/source_modules/file_source/Release/file_source.dll sdrpp_windows_x
 
 cp $build_dir/source_modules/fobossdr_source/Release/fobossdr_source.dll sdrpp_windows_x64/modules/
 cp 'C:/Program Files/RigExpert/Fobos/bin/fobos.dll' sdrpp_windows_x64/
+cp 'C:/Program Files (x86)/fobos_sdr/bin/fobos_sdr.dll' sdrpp_windows_x64/
 
 cp $build_dir/source_modules/hackrf_source/Release/hackrf_source.dll sdrpp_windows_x64/modules/
 cp 'C:/Program Files/PothosSDR/bin/hackrf.dll' sdrpp_windows_x64/
