@@ -11,7 +11,7 @@
 SDRPP_MOD_INFO{
     /* Name:            */ "fobossdr_agile_source",
     /* Description:     */ "FobosSDR Agile Source Module",
-    /* Author:          */ "",
+    /* Author:          */ "Ryzerth, Alexey Lysiuk",
     /* Version:         */ 0, 1, 0,
     /* Max instances    */ -1
 };
@@ -451,7 +451,7 @@ private:
                 unsigned int sampCount = 0;
                 int err = fobos_sdr_read_sync(openDev, (float*)ddc.out.writeBuf, &sampCount);
                 if (err) { break; }
-                
+
                 // Send out samples to the core
                 if (!ddc.out.swap(sampCount)) { break; }
             }
@@ -462,7 +462,7 @@ private:
                 unsigned int sampCount = 0;
                 int err = fobos_sdr_read_sync(openDev, (float*)ddcIn.writeBuf, &sampCount);
                 if (err) { break; }
-                
+
                 // Send samples to the DDC
                 if (!ddcIn.swap(sampCount)) { break; }
             }
@@ -478,7 +478,7 @@ private:
                 for (int i = 0; i < sampCount; i++) {
                     ddcIn.writeBuf[i].im = 0.0f;
                 }
-                
+
                 // Send samples to the DDC
                 if (!ddcIn.swap(sampCount)) { break; }
             }
@@ -494,7 +494,7 @@ private:
                 for (int i = 0; i < sampCount; i++) {
                     ddcIn.writeBuf[i].re = 0.0f;
                 }
-                
+
                 // Send samples to the DDC
                 if (!ddcIn.swap(sampCount)) { break; }
             }
