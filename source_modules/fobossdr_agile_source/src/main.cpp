@@ -355,6 +355,7 @@ private:
             if (err) {
                 flog::error("Failed to stop scan: {}", err);
             }
+            _this->currentSegment = -1;
         }
 
         // Stop streaming
@@ -484,10 +485,18 @@ private:
 
         if (_this->running) { SmGui::BeginDisabled(); }
 
-        SmGui::Checkbox("Scan mode##_fobossdr_agile_scanmode_", &_this->scanMode);
+        if (SmGui::Checkbox("Scan mode##_fobossdr_agile_scanmode_", &_this->scanMode)) {
+            if (!_this->selectedSerial.empty()) {
+                config.acquire();
+                config.conf["devices"][_this->selectedSerial]["scanMode"] = _this->scanMode;
+                config.release(true);
+            }
+        }
+
         SmGui::SameLine();
         SmGui::FillWidth();
-        if (SmGui::SliderInt("##_fobossdr_agile_scanmode_segments_", &_this->segments, FOBOS_MIN_FREQS_CNT, FOBOS_MAX_FREQS_CNT)) {
+
+        if (SmGui::SliderInt("##_fobossdr_agile_scanmode_segments_", &_this->segments, FOBOS_MIN_FREQS_CNT, FOBOS_MAX_FREQS_CNT, SmGui::FMT_STR_INT_DEFAULT, ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_Logarithmic)) {
             if (!_this->selectedSerial.empty()) {
                 config.acquire();
                 config.conf["devices"][_this->selectedSerial]["scanModeSegments"] = _this->segments;
@@ -496,16 +505,36 @@ private:
         }
 
         if (_this->running) { SmGui::EndDisabled(); }
+
+        if (_this->running) {
+//            char buf[64];
+//            snprintf(buf, sizeof buf, "Current segment: %i", _this->currentSegment);
+//            SmGui::LeftLabel(buf);
+//            ImGui::NewLine();
+            printf("-> %i\n", _this->currentSegment);
+        }
     }
 
     void worker() {
         // Select different processing depending on the mode
         if (port == PORT_RF && sampleRate >= 50e6) {
             while (run) {
+                if (scanMode) {
+                    currentSegment = fobos_sdr_get_scan_index(openDev);
+                }
+
                 // Read samples
                 unsigned int sampCount = 0;
                 int err = fobos_sdr_read_sync(openDev, (float*)ddc.out.writeBuf, &sampCount);
                 if (err) { break; }
+
+//                if (scanMode) {
+//                    currentSegment = fobos_sdr_get_scan_index(openDev);
+//                }
+
+//                if (scanMode && currentSegment == -1) {
+//                    continue;
+//                }
 
                 // Send out samples to the core
                 if (!ddc.out.swap(sampCount)) { break; }
@@ -589,6 +618,7 @@ private:
     // Scan mode
     std::vector<double> frequencies;
     int segments = 2;
+    int currentSegment = -1;
 };
 
 MOD_EXPORT void _INIT_() {
