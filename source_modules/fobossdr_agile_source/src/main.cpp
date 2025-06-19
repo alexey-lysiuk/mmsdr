@@ -147,7 +147,7 @@ private:
         selectedDevId = devices[id];
 
         // Open the device
-		fobos_sdr_dev_t* dev;
+        fobos_sdr_dev_t* dev;
         int err = fobos_sdr_open(&dev, selectedDevId);
         if (err) {
             flog::error("Failed to open device: {}", err);
@@ -204,31 +204,35 @@ private:
 
         // Load config
         config.acquire();
-        if (config.conf["devices"][selectedSerial].contains("samplerate")) {
-            int desiredSr = config.conf["devices"][selectedSerial]["samplerate"];
+        auto& deviceConfig = config.conf["devices"][selectedSerial];
+        if (deviceConfig.contains("samplerate")) {
+            int desiredSr = deviceConfig["samplerate"];
             if (samplerates.keyExists(desiredSr)) {
                 srId = samplerates.keyId(desiredSr);
                 sampleRate = samplerates[srId];
             }
         }
-        if (config.conf["devices"][selectedSerial].contains("port")) {
-            std::string desiredPort = config.conf["devices"][selectedSerial]["port"];
+        if (deviceConfig.contains("port")) {
+            std::string desiredPort = deviceConfig["port"];
             if (ports.keyExists(desiredPort)) {
                 portId = ports.keyId(desiredPort);
                 port = ports[portId];
             }
         }
-        if (config.conf["devices"][selectedSerial].contains("clkSrc")) {
-            std::string desiredClkSrc = config.conf["devices"][selectedSerial]["clkSrc"];
+        if (deviceConfig.contains("clkSrc")) {
+            std::string desiredClkSrc = deviceConfig["clkSrc"];
             if (clockSources.keyExists(desiredClkSrc)) {
                 clkSrcId = clockSources.keyId(desiredClkSrc);
             }
         }
-        if (config.conf["devices"][selectedSerial].contains("lnaGain")) {
-            lnaGain = std::clamp<int>(config.conf["devices"][selectedSerial]["lnaGain"], FOBOS_LNA_GAIN_MIN, FOBOS_LNA_GAIN_MAX);
+        if (deviceConfig.contains("lnaGain")) {
+            lnaGain = std::clamp<int>(deviceConfig["lnaGain"], FOBOS_LNA_GAIN_MIN, FOBOS_LNA_GAIN_MAX);
         }
-        if (config.conf["devices"][selectedSerial].contains("vgaGain")) {
-            vgaGain = std::clamp<int>(config.conf["devices"][selectedSerial]["vgaGain"], FOBOS_VGA_GAIN_MIN, FOBOS_VGA_GAIN_MAX);
+        if (deviceConfig.contains("vgaGain")) {
+            vgaGain = std::clamp<int>(deviceConfig["vgaGain"], FOBOS_VGA_GAIN_MIN, FOBOS_VGA_GAIN_MAX);
+        }
+        if (deviceConfig.contains("scanMode")) {
+            scanMode = deviceConfig["scanMode"];
         }
         config.release();
 
@@ -441,6 +445,10 @@ private:
                 }
             }
         }
+
+        if (_this->running) { SmGui::BeginDisabled(); }
+        ImGui::Checkbox("Scan mode##_fobossdr_agile_scanmode_", &_this->scanMode);
+        if (_this->running) { SmGui::EndDisabled(); }
     }
 
     void worker() {
@@ -503,6 +511,7 @@ private:
 
     std::string name;
     bool enabled = true;
+    bool scanMode = false;
     double sampleRate;
     SourceManager::SourceHandler handler;
     bool running = false;
