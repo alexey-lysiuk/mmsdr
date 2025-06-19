@@ -234,6 +234,9 @@ private:
         if (deviceConfig.contains("scanMode")) {
             scanMode = deviceConfig["scanMode"];
         }
+        if (deviceConfig.contains("scanModeSegments")) {
+            segments = std::clamp<int>(deviceConfig["scanModeSegments"], FOBOS_MIN_FREQS_CNT, FOBOS_MAX_FREQS_CNT);
+        }
         config.release();
 
         // Update the samplerate
@@ -273,34 +276,49 @@ private:
         fobos_sdr_set_lna_gain(_this->openDev, _this->lnaGain);
         fobos_sdr_set_vga_gain(_this->openDev, _this->vgaGain);
 
-        // Configure the DDC
-        if (_this->port == PORT_RF && _this->sampleRate >= 50e6) {
-            // Set the frequency
-            fobos_sdr_set_frequency(_this->openDev, _this->freq);
-        }
-        else if (_this->port == PORT_RF) {
-            // Set the frequency
-            fobos_sdr_set_frequency(_this->openDev, _this->freq);
+        if (_this->scanMode) {
+            auto& frequencies = _this->frequencies;
+            frequencies.clear();
 
-            // Configure and start the DDC for decimation only
-            _this->ddc.setInSamplerate(_this->sampleRate);
-            _this->ddc.setOutSamplerate(_this->sampleRate, _this->sampleRate);
-            _this->ddc.setOffset(0.0);
-            _this->ddc.start();
-        }
-        else {
-            // Configure and start the DDC
-            _this->ddc.setInSamplerate(_this->sampleRate);
-            _this->ddc.setOutSamplerate(_this->sampleRate, _this->sampleRate);
-            _this->ddc.setOffset(_this->freq);
-            _this->ddc.start();
+            const double rate = _this->sampleRate;
+            const int segments = _this->segments;
+            const double span = rate * segments;
+            const double first = _this->freq - 0.5 * (span - rate);
+            // TODO: add bounds cheking
+
+            for (int i = 0; i < segments; ++i) {
+                frequencies.push_back(first + i * rate);
+            }
+        } else {
+            // Configure the DDC
+            if (_this->port == PORT_RF && _this->sampleRate >= 50e6) {
+                // Set the frequency
+                fobos_sdr_set_frequency(_this->openDev, _this->freq);
+            }
+            else if (_this->port == PORT_RF) {
+                // Set the frequency
+                fobos_sdr_set_frequency(_this->openDev, _this->freq);
+
+                // Configure and start the DDC for decimation only
+                _this->ddc.setInSamplerate(_this->sampleRate);
+                _this->ddc.setOutSamplerate(_this->sampleRate, _this->sampleRate);
+                _this->ddc.setOffset(0.0);
+                _this->ddc.start();
+            }
+            else {
+                // Configure and start the DDC
+                _this->ddc.setInSamplerate(_this->sampleRate);
+                _this->ddc.setOutSamplerate(_this->sampleRate, _this->sampleRate);
+                _this->ddc.setOffset(_this->freq);
+                _this->ddc.start();
+            }
         }
 
         // Compute buffer size (Lower than usual, but it's a workaround for their API having broken streaming)
-        _this->bufferSize = _this->sampleRate / 400.0;
+        const int bufferSize = _this->sampleRate / 400.0;
 
         // Start streaming
-        err = fobos_sdr_start_sync(_this->openDev, _this->bufferSize);
+        err = fobos_sdr_start_sync(_this->openDev, bufferSize);
         if (err) {
             flog::error("Failed to start stream: {}", err);
             return;
@@ -332,6 +350,13 @@ private:
             _this->ddcIn.clearWriteStop();
         }
 
+        if (_this->scanMode) {
+            int err = fobos_sdr_stop_scan(_this->openDev);
+            if (err) {
+                flog::error("Failed to stop scan: {}", err);
+            }
+        }
+
         // Stop streaming
         fobos_sdr_stop_sync(_this->openDev);
 
@@ -348,11 +373,22 @@ private:
         FobosSDRAgileSourceModule* _this = static_cast<FobosSDRAgileSourceModule*>(ctx);
 
         if (_this->running) {
-            if (_this->port == PORT_RF) {
-                fobos_sdr_set_frequency(_this->openDev, freq);
+            if (_this->scanMode) {
+                auto& frequencies = _this->frequencies;
+                const unsigned count = static_cast<unsigned>(frequencies.size());
+                int err = fobos_sdr_start_scan(_this->openDev, frequencies.data(), count);
+                if (err) {
+                    flog::error("Failed to start scan: {}", err);
+                    return;
+                }
             }
             else {
-                _this->ddc.setOffset(freq);
+                if (_this->port == PORT_RF) {
+                    fobos_sdr_set_frequency(_this->openDev, freq);
+                }
+                else {
+                    _this->ddc.setOffset(freq);
+                }
             }
         }
         _this->freq = freq;
@@ -447,7 +483,18 @@ private:
         }
 
         if (_this->running) { SmGui::BeginDisabled(); }
-        ImGui::Checkbox("Scan mode##_fobossdr_agile_scanmode_", &_this->scanMode);
+
+        SmGui::Checkbox("Scan mode##_fobossdr_agile_scanmode_", &_this->scanMode);
+        SmGui::SameLine();
+        SmGui::FillWidth();
+        if (SmGui::SliderInt("##_fobossdr_agile_scanmode_segments_", &_this->segments, FOBOS_MIN_FREQS_CNT, FOBOS_MAX_FREQS_CNT)) {
+            if (!_this->selectedSerial.empty()) {
+                config.acquire();
+                config.conf["devices"][_this->selectedSerial]["scanModeSegments"] = _this->segments;
+                config.release(true);
+            }
+        }
+
         if (_this->running) { SmGui::EndDisabled(); }
     }
 
@@ -533,12 +580,15 @@ private:
 
     fobos_sdr_dev_t* openDev;
 
-    int bufferSize;
     std::thread workerThread;
     std::atomic<bool> run = false;
 
     dsp::stream<dsp::complex_t> ddcIn;
     dsp::channel::RxVFO ddc;
+
+    // Scan mode
+    std::vector<double> frequencies;
+    int segments = 2;
 };
 
 MOD_EXPORT void _INIT_() {
