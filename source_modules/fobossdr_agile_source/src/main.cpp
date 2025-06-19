@@ -233,12 +233,12 @@ private:
         config.release();
 
         // Update the samplerate
-        core::setInputSampleRate(sampleRate * 4);
+        core::setInputSampleRate(sampleRate);
     }
 
     static void menuSelected(void* ctx) {
         FobosSDRAgileSourceModule* _this = static_cast<FobosSDRAgileSourceModule*>(ctx);
-        core::setInputSampleRate(_this->sampleRate * 4);
+        core::setInputSampleRate(_this->sampleRate);
         flog::info("FobosSDRAgileSourceModule '{0}': Menu Select!", _this->name);
     }
 
@@ -295,20 +295,6 @@ private:
         // Compute buffer size (Lower than usual, but it's a workaround for their API having broken streaming)
         _this->bufferSize = _this->sampleRate / 400.0;
 
-        double freqs[] =
-        {
-            _this->freq - 50'000'000,
-            _this->freq,
-            _this->freq + 50'000'000,
-            _this->freq + 100'000'000,
-        };
-
-        err = fobos_sdr_start_scan(_this->openDev, freqs, sizeof(freqs) / sizeof(freqs[0]));
-        if (err) {
-            flog::error("Failed to start scan: {}", err);
-            return;
-        }
-
         // Start streaming
         err = fobos_sdr_start_sync(_this->openDev, _this->bufferSize);
         if (err) {
@@ -343,13 +329,7 @@ private:
         }
 
         // Stop streaming
-        int err = fobos_sdr_stop_sync(_this->openDev);
-        if (err)
-            flog::error("Failed to start stream: {}", err);
-
-        err = fobos_sdr_stop_scan(_this->openDev);
-        if (err)
-            flog::error("Failed to start scan: {}", err);
+        fobos_sdr_stop_sync(_this->openDev);
 
         // Stop the DDC
         _this->ddc.stop();
@@ -370,18 +350,6 @@ private:
             else {
                 _this->ddc.setOffset(freq);
             }
-
-            double freqs[] =
-            {
-                _this->freq - 50'000'000,
-                _this->freq,
-                _this->freq + 50'000'000,
-                _this->freq + 100'000'000,
-            };
-
-            int err = fobos_sdr_start_scan(_this->openDev, freqs, sizeof(freqs) / sizeof(freqs[0]));
-            if (err)
-                flog::error("Failed to start scan: {}", err);
         }
         _this->freq = freq;
         flog::info("FobosSDRAgileSourceModule '{0}': Tune: {1}!", _this->name, freq);
@@ -396,7 +364,7 @@ private:
         SmGui::ForceSync();
         if (SmGui::Combo(CONCAT("##_fobossdr_agile_dev_sel_", _this->name), &_this->devId, _this->devices.txt)) {
             _this->select(_this->devices.key(_this->devId));
-            core::setInputSampleRate(_this->sampleRate * 4);
+            core::setInputSampleRate(_this->sampleRate);
             config.acquire();
             config.conf["device"] = _this->selectedSerial;
             config.release(true);
@@ -404,7 +372,7 @@ private:
 
         if (SmGui::Combo(CONCAT("##_fobossdr_agile_sr_sel_", _this->name), &_this->srId, _this->samplerates.txt)) {
             _this->sampleRate = _this->samplerates.value(_this->srId);
-            core::setInputSampleRate(_this->sampleRate * 4);
+            core::setInputSampleRate(_this->sampleRate);
             if (!_this->selectedSerial.empty()) {
                 config.acquire();
                 config.conf["devices"][_this->selectedSerial]["samplerate"] = _this->samplerates.key(_this->srId);
@@ -418,7 +386,7 @@ private:
         if (SmGui::Button(CONCAT("Refresh##_fobossdr_agile_refr_", _this->name))) {
             _this->refresh();
             _this->select(_this->selectedSerial);
-            core::setInputSampleRate(_this->sampleRate * 4);
+            core::setInputSampleRate(_this->sampleRate);
         }
 
         SmGui::LeftLabel("Antenna Port");
