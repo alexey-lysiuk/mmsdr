@@ -295,7 +295,7 @@ private:
             const double first = _this->freq - 0.5 * (span - rate);
             // TODO: add bounds cheking
 
-            bufferSize /= segments;
+            //bufferSize /= segments;
 
             for (int i = 0; i < segments; ++i) {
                 frequencies.push_back(first + i * rate);
@@ -537,18 +537,26 @@ private:
                     int err = fobos_sdr_read_sync(openDev, (float*)ddc.out.writeBuf, &sampCount);
                     if (err) { break; }
 
-                    if (scanMode) {
-                        if (currentSegment == -1)
-                            continue;
+                    if (currentSegment == -1)
+                        continue;
 
-                        memcpy(buffers[currentSegment].data(), ddc.out.writeBuf, sampCount * sizeof(float));
+                    buffers[currentSegment].resize(sampCount);
+                    memcpy(buffers[currentSegment].data(), ddc.out.writeBuf, sampCount * sizeof(float));
 
-                        if (currentSegment != buffers.size() - 1)
-                            continue;
+                    if (currentSegment == buffers.size() - 1) {
+                        float* writePtr = reinterpret_cast<float*>(ddc.out.writeBuf);
+                        int totalSize = 0;
+
+                        for (const auto& buffer : buffers) {
+                            const size_t size = buffer.size();
+                            memcpy(writePtr, buffer.data(), size * sizeof(float));
+                            totalSize += size;
+                            writePtr += size;
+                        }
+
+                        // Send out samples to the core
+                        if (!ddc.out.swap(totalSize)) { break; }
                     }
-
-                    // Send out samples to the core
-                    if (!ddc.out.swap(sampCount)) { break; }
                 }
                 else {
                     // Read samples
