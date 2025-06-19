@@ -92,6 +92,10 @@ private:
         return std::string(buf);
     }
 
+    void updateSampleRate() const {
+        core::setInputSampleRate(sampleRate * (scanMode ? segments : 1));
+    }
+
     void refresh() {
         devices.clear();
 
@@ -239,13 +243,12 @@ private:
         }
         config.release();
 
-        // Update the samplerate
-        core::setInputSampleRate(sampleRate);
+        updateSampleRate();
     }
 
     static void menuSelected(void* ctx) {
         FobosSDRAgileSourceModule* _this = static_cast<FobosSDRAgileSourceModule*>(ctx);
-        core::setInputSampleRate(_this->sampleRate);
+        _this->updateSampleRate();
         flog::info("FobosSDRAgileSourceModule '{0}': Menu Select!", _this->name);
     }
 
@@ -276,9 +279,15 @@ private:
         fobos_sdr_set_lna_gain(_this->openDev, _this->lnaGain);
         fobos_sdr_set_vga_gain(_this->openDev, _this->vgaGain);
 
+        // Compute buffer size (Lower than usual, but it's a workaround for their API having broken streaming)
+        int bufferSize = _this->sampleRate / 400.0;
+
         if (_this->scanMode) {
             auto& frequencies = _this->frequencies;
             frequencies.clear();
+
+            auto& buffers = _this->buffers;
+            buffers.clear();
 
             const double rate = _this->sampleRate;
             const int segments = _this->segments;
@@ -286,8 +295,11 @@ private:
             const double first = _this->freq - 0.5 * (span - rate);
             // TODO: add bounds cheking
 
+            bufferSize /= segments;
+
             for (int i = 0; i < segments; ++i) {
                 frequencies.push_back(first + i * rate);
+                buffers.emplace_back(bufferSize);
             }
         } else {
             // Configure the DDC
@@ -313,9 +325,6 @@ private:
                 _this->ddc.start();
             }
         }
-
-        // Compute buffer size (Lower than usual, but it's a workaround for their API having broken streaming)
-        const int bufferSize = _this->sampleRate / 400.0;
 
         // Start streaming
         err = fobos_sdr_start_sync(_this->openDev, bufferSize);
@@ -405,7 +414,7 @@ private:
         SmGui::ForceSync();
         if (SmGui::Combo(CONCAT("##_fobossdr_agile_dev_sel_", _this->name), &_this->devId, _this->devices.txt)) {
             _this->select(_this->devices.key(_this->devId));
-            core::setInputSampleRate(_this->sampleRate);
+            _this->updateSampleRate();
             config.acquire();
             config.conf["device"] = _this->selectedSerial;
             config.release(true);
@@ -413,7 +422,7 @@ private:
 
         if (SmGui::Combo(CONCAT("##_fobossdr_agile_sr_sel_", _this->name), &_this->srId, _this->samplerates.txt)) {
             _this->sampleRate = _this->samplerates.value(_this->srId);
-            core::setInputSampleRate(_this->sampleRate);
+            _this->updateSampleRate();
             if (!_this->selectedSerial.empty()) {
                 config.acquire();
                 config.conf["devices"][_this->selectedSerial]["samplerate"] = _this->samplerates.key(_this->srId);
@@ -427,7 +436,7 @@ private:
         if (SmGui::Button(CONCAT("Refresh##_fobossdr_agile_refr_", _this->name))) {
             _this->refresh();
             _this->select(_this->selectedSerial);
-            core::setInputSampleRate(_this->sampleRate);
+            _this->updateSampleRate();
         }
 
         SmGui::LeftLabel("Antenna Port");
@@ -501,6 +510,7 @@ private:
                 config.acquire();
                 config.conf["devices"][_this->selectedSerial]["scanModeSegments"] = _this->segments;
                 config.release(true);
+                _this->updateSampleRate();
             }
         }
 
@@ -521,23 +531,34 @@ private:
             while (run) {
                 if (scanMode) {
                     currentSegment = fobos_sdr_get_scan_index(openDev);
+
+                    // Read samples
+                    unsigned int sampCount = 0;
+                    int err = fobos_sdr_read_sync(openDev, (float*)ddc.out.writeBuf, &sampCount);
+                    if (err) { break; }
+
+                    if (scanMode) {
+                        if (currentSegment == -1)
+                            continue;
+
+                        memcpy(buffers[currentSegment].data(), ddc.out.writeBuf, sampCount * sizeof(float));
+
+                        if (currentSegment != buffers.size() - 1)
+                            continue;
+                    }
+
+                    // Send out samples to the core
+                    if (!ddc.out.swap(sampCount)) { break; }
                 }
+                else {
+                    // Read samples
+                    unsigned int sampCount = 0;
+                    int err = fobos_sdr_read_sync(openDev, (float*)ddc.out.writeBuf, &sampCount);
+                    if (err) { break; }
 
-                // Read samples
-                unsigned int sampCount = 0;
-                int err = fobos_sdr_read_sync(openDev, (float*)ddc.out.writeBuf, &sampCount);
-                if (err) { break; }
-
-//                if (scanMode) {
-//                    currentSegment = fobos_sdr_get_scan_index(openDev);
-//                }
-
-//                if (scanMode && currentSegment == -1) {
-//                    continue;
-//                }
-
-                // Send out samples to the core
-                if (!ddc.out.swap(sampCount)) { break; }
+                    // Send out samples to the core
+                    if (!ddc.out.swap(sampCount)) { break; }
+                }
             }
         }
         else if (port == PORT_RF) {
@@ -617,6 +638,7 @@ private:
 
     // Scan mode
     std::vector<double> frequencies;
+    std::vector<std::vector<float>> buffers;
     int segments = 2;
     int currentSegment = -1;
 };
